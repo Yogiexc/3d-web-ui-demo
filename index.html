@@ -37,6 +37,43 @@
                 <div>Scroll untuk zoom in/out</div>
             </div>
         </div>
+
+        <!-- NEW: Feature Panel -->
+        <div class="feature-panel">
+            <h3 class="feature-title">🎨 Controls</h3>
+            
+            <div class="feature-group">
+                <label class="feature-label">Object Color:</label>
+                <input type="color" id="color-picker" value="#667eea" class="color-input">
+            </div>
+
+            <div class="feature-group">
+                <label class="feature-label">
+                    <input type="checkbox" id="wireframe-toggle" class="checkbox-input">
+                    Wireframe Mode
+                </label>
+            </div>
+
+            <div class="feature-group">
+                <label class="feature-label">
+                    <input type="checkbox" id="auto-rotate-toggle" checked class="checkbox-input">
+                    Auto Rotate
+                </label>
+            </div>
+
+            <div class="feature-group">
+                <button id="screenshot-btn" class="action-btn">📸 Screenshot</button>
+            </div>
+
+            <div class="feature-group">
+                <label class="feature-label">Scene Preset:</label>
+                <select id="scene-preset" class="select-input">
+                    <option value="space">🌌 Space</option>
+                    <option value="neon">💜 Neon</option>
+                    <option value="minimal">⚪ Minimal</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Info Panel -->
@@ -48,6 +85,10 @@
         <div class="stat">
             <span class="stat-label">Objects:</span>
             <span class="stat-value" id="object-count">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Particles:</span>
+            <span class="stat-value" id="particle-count">0</span>
         </div>
         <div class="stat">
             <span class="stat-label">FPS:</span>

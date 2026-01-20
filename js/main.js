@@ -7,6 +7,11 @@ let selectedObject = null;
 let frameCount = 0;
 let lastTime = Date.now();
 
+// NEW: Variables untuk fitur baru
+let particles;
+let autoRotate = true;
+let currentPreset = 'space';
+
 // ===================================
 // Initialization Function
 // ===================================
@@ -17,17 +22,18 @@ function init() {
 
     // Setup Camera
     camera = new THREE.PerspectiveCamera(
-        75,                                    // FOV
-        window.innerWidth / window.innerHeight, // Aspect ratio
-        0.1,                                   // Near clipping plane
-        1000                                   // Far clipping plane
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
     );
     camera.position.z = 8;
 
     // Setup Renderer
     renderer = new THREE.WebGLRenderer({ 
         antialias: true, 
-        alpha: true 
+        alpha: true,
+        preserveDrawingBuffer: true // Untuk screenshot feature
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -47,11 +53,17 @@ function init() {
     // Create 3D Objects
     createObjects();
 
+    // NEW: Create Particle System
+    createParticleSystem();
+
     // Event Listeners
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('click', onMouseClick);
     window.addEventListener('wheel', onMouseWheel);
+
+    // NEW: Feature Controls Event Listeners
+    setupFeatureControls();
 
     // Hide loading screen
     document.getElementById('loading').classList.add('hidden');
@@ -61,14 +73,133 @@ function init() {
 }
 
 // ===================================
+// NEW FEATURE 1: Particle System
+// ===================================
+function createParticleSystem() {
+    const particleCount = 1000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 50;
+        positions[i + 1] = (Math.random() - 0.5) * 50;
+        positions[i + 2] = (Math.random() - 0.5) * 50;
+
+        velocities[i] = (Math.random() - 0.5) * 0.02;
+        velocities[i + 1] = (Math.random() - 0.5) * 0.02;
+        velocities[i + 2] = (Math.random() - 0.5) * 0.02;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.1,
+        transparent: true,
+        opacity: 0.6
+    });
+
+    particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    document.getElementById('particle-count').textContent = particleCount;
+}
+
+function updateParticles() {
+    const positions = particles.geometry.attributes.position.array;
+    const velocities = particles.geometry.attributes.velocity.array;
+
+    for (let i = 0; i < positions.length; i += 3) {
+        positions[i] += velocities[i];
+        positions[i + 1] += velocities[i + 1];
+        positions[i + 2] += velocities[i + 2];
+
+        // Wrap around bounds
+        if (Math.abs(positions[i]) > 25) velocities[i] *= -1;
+        if (Math.abs(positions[i + 1]) > 25) velocities[i + 1] *= -1;
+        if (Math.abs(positions[i + 2]) > 25) velocities[i + 2] *= -1;
+    }
+
+    particles.geometry.attributes.position.needsUpdate = true;
+}
+
+// ===================================
+// NEW FEATURE 2-6: Feature Controls
+// ===================================
+function setupFeatureControls() {
+    // Color Picker
+    const colorPicker = document.getElementById('color-picker');
+    colorPicker.addEventListener('input', (e) => {
+        if (selectedObject) {
+            selectedObject.material.color.set(e.target.value);
+        }
+    });
+
+    // Wireframe Toggle
+    const wireframeToggle = document.getElementById('wireframe-toggle');
+    wireframeToggle.addEventListener('change', (e) => {
+        objects.forEach(obj => {
+            obj.material.wireframe = e.target.checked;
+        });
+    });
+
+    // Auto Rotate Toggle
+    const autoRotateToggle = document.getElementById('auto-rotate-toggle');
+    autoRotateToggle.addEventListener('change', (e) => {
+        autoRotate = e.target.checked;
+    });
+
+    // Screenshot Button
+    const screenshotBtn = document.getElementById('screenshot-btn');
+    screenshotBtn.addEventListener('click', takeScreenshot);
+
+    // Scene Preset
+    const scenePreset = document.getElementById('scene-preset');
+    scenePreset.addEventListener('change', (e) => {
+        changeScenePreset(e.target.value);
+    });
+}
+
+// NEW: Screenshot Feature
+function takeScreenshot() {
+    const link = document.createElement('a');
+    link.download = `3d-scene-${Date.now()}.png`;
+    link.href = renderer.domElement.toDataURL('image/png');
+    link.click();
+}
+
+// NEW: Scene Preset Changer
+function changeScenePreset(preset) {
+    currentPreset = preset;
+
+    switch(preset) {
+        case 'space':
+            scene.background = null;
+            scene.fog = new THREE.Fog(0x0a0e27, 10, 50);
+            particles.material.color.set(0xffffff);
+            break;
+        case 'neon':
+            scene.background = new THREE.Color(0x1a0033);
+            scene.fog = new THREE.Fog(0x1a0033, 10, 50);
+            particles.material.color.set(0xff00ff);
+            break;
+        case 'minimal':
+            scene.background = new THREE.Color(0xf0f0f0);
+            scene.fog = new THREE.Fog(0xf0f0f0, 10, 50);
+            particles.material.color.set(0x333333);
+            break;
+    }
+}
+
+// ===================================
 // Lighting Setup
 // ===================================
 function setupLighting() {
-    // Ambient Light - memberikan pencahayaan dasar untuk semua objek
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    // Point Light 1 - Purple glow
     const pointLight1 = new THREE.PointLight(0x667eea, 1, 100);
     pointLight1.position.set(5, 5, 5);
     pointLight1.castShadow = true;
@@ -76,12 +207,10 @@ function setupLighting() {
     pointLight1.shadow.mapSize.height = 1024;
     scene.add(pointLight1);
 
-    // Point Light 2 - Pink glow
     const pointLight2 = new THREE.PointLight(0x764ba2, 0.8, 100);
     pointLight2.position.set(-5, -5, 5);
     scene.add(pointLight2);
 
-    // Directional Light - untuk shadows yang lebih defined
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
     directionalLight.position.set(0, 10, 0);
     scene.add(directionalLight);
@@ -91,7 +220,7 @@ function setupLighting() {
 // Create 3D Objects
 // ===================================
 function createObjects() {
-    // ========== Central Rotating Cube ==========
+    // Central Rotating Cube
     const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
     const cubeMaterial = new THREE.MeshStandardMaterial({
         color: 0x667eea,
@@ -110,7 +239,7 @@ function createObjects() {
     scene.add(cube);
     objects.push(cube);
 
-    // ========== Orbiting Spheres ==========
+    // Orbiting Spheres
     for (let i = 0; i < 5; i++) {
         const sphereGeometry = new THREE.SphereGeometry(0.4, 32, 32);
         const sphereMaterial = new THREE.MeshStandardMaterial({
@@ -120,7 +249,6 @@ function createObjects() {
         });
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         
-        // Posisi awal dalam formasi lingkaran
         const angle = (i / 5) * Math.PI * 2;
         sphere.position.x = Math.cos(angle) * 4;
         sphere.position.z = Math.sin(angle) * 4;
@@ -138,7 +266,7 @@ function createObjects() {
         objects.push(sphere);
     }
 
-    // ========== Torus Knot ==========
+    // Torus Knot
     const torusGeometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
     const torusMaterial = new THREE.MeshStandardMaterial({
         color: 0x764ba2,
@@ -156,7 +284,7 @@ function createObjects() {
     scene.add(torus);
     objects.push(torus);
 
-    // ========== Icosahedron (bonus object) ==========
+    // Icosahedron
     const icoGeometry = new THREE.IcosahedronGeometry(0.8, 0);
     const icoMaterial = new THREE.MeshStandardMaterial({
         color: 0xff6b6b,
@@ -173,7 +301,6 @@ function createObjects() {
     scene.add(icosahedron);
     objects.push(icosahedron);
 
-    // Update object count di UI
     document.getElementById('object-count').textContent = objects.length;
 }
 
@@ -190,22 +317,18 @@ function onWindowResize() {
 // Mouse Move Handler
 // ===================================
 function onMouseMove(event) {
-    // Convert mouse position ke normalized device coordinates (-1 to +1)
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // Raycasting untuk hover effect
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(objects);
 
-    // Reset scale untuk semua objek kecuali yang selected
     objects.forEach(obj => {
         if (obj !== selectedObject) {
             obj.scale.set(1, 1, 1);
         }
     });
 
-    // Hover effect
     if (intersects.length > 0) {
         const hoveredObject = intersects[0].object;
         if (hoveredObject !== selectedObject) {
@@ -224,19 +347,18 @@ function onMouseClick(event) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(objects);
 
-    // Deselect previous object
     if (selectedObject) {
         selectedObject.scale.set(1, 1, 1);
     }
 
-    // Select new object
     if (intersects.length > 0) {
         selectedObject = intersects[0].object;
         selectedObject.scale.set(1.3, 1.3, 1.3);
         document.getElementById('selected').textContent = selectedObject.userData.name;
         
-        // Optional: Log object info untuk debugging
-        console.log('Selected:', selectedObject.userData.name);
+        // Update color picker dengan warna objek yang dipilih
+        const color = '#' + selectedObject.material.color.getHexString();
+        document.getElementById('color-picker').value = color;
     } else {
         selectedObject = null;
         document.getElementById('selected').textContent = 'None';
@@ -272,24 +394,27 @@ function animate() {
         lastTime = currentTime;
     }
 
-    // Animate all objects
-    objects.forEach((obj, index) => {
-        // Rotasi untuk objek yang punya rotationSpeed
-        if (obj.userData.rotationSpeed) {
-            obj.rotation.x += obj.userData.rotationSpeed;
-            obj.rotation.y += obj.userData.rotationSpeed;
-        }
+    // Update particles
+    updateParticles();
 
-        // Orbit untuk spheres
-        if (obj.userData.orbitSpeed) {
-            obj.userData.angle += obj.userData.orbitSpeed * 0.01;
-            obj.position.x = Math.cos(obj.userData.angle) * 4;
-            obj.position.z = Math.sin(obj.userData.angle) * 4;
-            obj.position.y = Math.sin(obj.userData.angle * 2) * 2;
-        }
-    });
+    // Animate objects (only if autoRotate is enabled)
+    if (autoRotate) {
+        objects.forEach((obj) => {
+            if (obj.userData.rotationSpeed) {
+                obj.rotation.x += obj.userData.rotationSpeed;
+                obj.rotation.y += obj.userData.rotationSpeed;
+            }
 
-    // Smooth camera movement mengikuti mouse
+            if (obj.userData.orbitSpeed) {
+                obj.userData.angle += obj.userData.orbitSpeed * 0.01;
+                obj.position.x = Math.cos(obj.userData.angle) * 4;
+                obj.position.z = Math.sin(obj.userData.angle) * 4;
+                obj.position.y = Math.sin(obj.userData.angle * 2) * 2;
+            }
+        });
+    }
+
+    // Smooth camera movement
     const targetX = mouse.x * 2;
     const targetY = -mouse.y * 2;
     
@@ -297,7 +422,6 @@ function animate() {
     camera.position.y += (targetY - camera.position.y) * 0.05;
     camera.lookAt(scene.position);
 
-    // Render scene
     renderer.render(scene, camera);
 }
 

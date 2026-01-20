@@ -314,12 +314,7 @@ MIT License - Free to use untuk learning, portfolio, dan commercial projects!
 
 ## 👨‍💻 Author
 
-**Your Name**
-
-- 🌐 Portfolio: [yourwebsite.com](https://yourwebsite.com)
-- 💼 LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
-- 🐙 GitHub: [@yourusername](https://github.com/yourusername)
-- 📧 Email: your.email@example.com
+- 🐙 GitHub: [@Yogiexc](https://github.com/Yogiexc)
 
 ---
 

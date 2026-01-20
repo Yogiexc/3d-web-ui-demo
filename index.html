@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="3D Web UI Demo - Exploring GPU-powered interactive graphics">
+    <meta name="author" content="Your Name">
+    <title>3D Web UI Demo - Three.js Interactive</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Initializing 3D Scene...</div>
+    </div>
+
+    <!-- UI Overlay -->
+    <div class="ui-overlay">
+        <h1 class="title">3D Web Interactive</h1>
+        <p class="subtitle">GPU-accelerated graphics beyond traditional UI</p>
+        
+        <div class="controls">
+            <div class="control-item">
+                <div class="control-icon">🖱️</div>
+                <div>Drag mouse untuk rotate scene</div>
+            </div>
+            <div class="control-item">
+                <div class="control-icon">🎯</div>
+                <div>Click object untuk interaksi</div>
+            </div>
+            <div class="control-item">
+                <div class="control-icon">🔄</div>
+                <div>Scroll untuk zoom in/out</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <div class="stat">
+            <span class="stat-label">Renderer:</span>
+            <span class="stat-value">WebGL</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Objects:</span>
+            <span class="stat-value" id="object-count">0</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">FPS:</span>
+            <span class="stat-value" id="fps">60</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Selected:</span>
+            <span class="stat-value" id="selected">None</span>
+        </div>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Main Application Script -->
+    <script src="js/main.js"></script>
+</body>
+</html>
